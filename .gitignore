@@ -1,0 +1,19 @@
+# dataset — large, public, re-downloadable from cicresearch.ca
+GeneratedLabelledFlows/
+MachineLearningCSV/
+*.csv
+*.zip
+*.pcap
+
+Outputs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# secrets — never commit API keys
+.env
+
+# local session files
+cowork_handoff.md
