@@ -1,11 +1,15 @@
-# dataset — large, public, re-downloadable from cicresearch.ca
+# dataset — large, public, re-downloadable from cicresearch.ca (lives in data/)
 GeneratedLabelledFlows/
 MachineLearningCSV/
 *.csv
 *.zip
 *.pcap
 
-Outputs/
+# MITRE ATT&CK STIX bundle — downloaded/cached by threat_intel.py into data/
+enterprise-attack.json
+
+# agent run artifacts — findings/mappings reports + generated diagrams
+outputs/
 
 # python
 __pycache__/
