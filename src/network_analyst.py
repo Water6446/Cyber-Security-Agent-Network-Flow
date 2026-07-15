@@ -22,6 +22,7 @@ Still runnable standalone (Week 2 demos must not break):
 import argparse
 import json
 import textwrap
+from typing import Optional
 
 import pandas as pd
 
@@ -38,8 +39,8 @@ from agent_core import MAX_TURNS, MAX_ROWS_RETURNED
 #     can see so it must *detect* anomalies, not read the answer key.
 #     We keep it separately for the evaluation sidecar afterward.
 
-df: pd.DataFrame = None          # agent-visible data (no Label)
-labels: pd.Series = None         # ground truth, for eval_sidecar only
+df: Optional[pd.DataFrame] = None    # agent-visible data (no Label)
+labels: Optional[pd.Series] = None   # ground truth, for eval_sidecar only
 
 
 def load_data(csv_path: str):

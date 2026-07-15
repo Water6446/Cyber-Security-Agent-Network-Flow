@@ -30,6 +30,7 @@ import os
 import re
 import textwrap
 import urllib.request
+from typing import Optional
 
 import agent_core
 from agent_core import MAX_TOOL_RESULT_CHARS
@@ -42,8 +43,8 @@ ATTACK_URL = ("https://raw.githubusercontent.com/mitre/cti/master/"
 ATTACK_LOCAL = os.path.join(agent_core.REPO_ROOT, "data",
                             "enterprise-attack.json")   # cached; in .gitignore
 
-TACTICS: list = None      # kill-chain-ordered [{shortname, name, description}]
-TECHNIQUES: dict = None   # "T1110" / "T1110.001" -> technique record
+TACTICS: Optional[list] = None    # kill-chain-ordered [{shortname, name, description}]
+TECHNIQUES: Optional[dict] = None # "T1110" / "T1110.001" -> technique record
 
 
 def _first_sentence(text: str) -> str:
