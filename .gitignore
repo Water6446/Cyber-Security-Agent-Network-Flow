@@ -1,15 +1,30 @@
-# dataset — large, public, re-downloadable from cicresearch.ca (lives in data/)
+# datasets — large, public, re-downloadable (git-ignored)
 GeneratedLabelledFlows/
 MachineLearningCSV/
+DAPT2020/
 *.csv
 *.zip
 *.pcap
 
+# ...but DO commit the small teaching slice used by the lab
+!course/lab/data/*.csv
+
 # MITRE ATT&CK STIX bundle — downloaded/cached by threat_intel.py into data/
 enterprise-attack.json
 
-# agent run artifacts — findings/mappings reports + generated diagrams
+# agent run artifacts — findings/mappings/kill_chain/report + generated diagrams
 outputs/
+
+# presentation QA byproducts (regenerable from presentation/build_deck.py)
+docs/slide-*.jpg
+docs/Week4_Briefing.pdf
+
+# office / libreoffice temp + lock files
+~$*
+.~lock.*#
+
+# pytest cache
+.pytest_cache/
 
 # python
 __pycache__/

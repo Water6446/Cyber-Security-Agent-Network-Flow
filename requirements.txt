@@ -1,5 +1,16 @@
-# python -m venv .venv && .venv/bin/pip install -r requirements.txt
-openai
-pandas
-langgraph
-requests    # only for workflow.py's optional remote Mermaid PNG render
+# Install:  python -m venv .venv && pip install -r requirements.txt
+#
+# Pinned to compatible major-version ranges so the project stays reproducible
+# without forcing a downgrade of a working environment. For an EXACT lock of the
+# versions you ran, use:  pip freeze > requirements.lock
+
+# --- runtime ---
+openai>=1.30,<3        # OpenAI-compatible client (also Anthropic compat endpoint, Ollama, ...)
+pandas>=2.0,<3         # flow data layer
+langgraph>=0.2,<2      # plain StateGraph orchestration (Graph API only)
+pyyaml>=6.0,<7         # environment/ profiles
+requests>=2.28,<3      # optional remote Mermaid PNG render in workflow.py
+
+# --- development / tests / tooling ---
+pytest>=7.0            # test suite (run: pytest -q from the repo root)
+python-pptx>=0.6,<2    # only for regenerating the presentation deck

@@ -181,10 +181,32 @@ def get_technique(technique_id: str) -> str:
                   "subtechniques": t["subtechniques"]})
 
 
+def list_subtechniques(technique_id: str) -> str:
+    """All sub-techniques of a parent technique in one call, each with its
+    tactic(s) and a short snippet — so choosing among e.g. T1110.001 / .003 /
+    .004 doesn't need a separate get_technique per candidate. Sub-technique IDs
+    returned here are recorded for grounding, so they are citable."""
+    load_attack_data()
+    tid = (technique_id or "").strip().upper()
+    t = TECHNIQUES.get(tid)
+    if not t:
+        return _emit({"error": f"unknown technique {technique_id!r}",
+                      "hint": "use search_techniques to find a valid parent id"})
+    subs = []
+    for s in t.get("subtechniques", []):
+        st = TECHNIQUES.get(s["id"], {})
+        subs.append({"id": s["id"], "name": s["name"],
+                     "tactics": st.get("tactics", []),
+                     "description_snippet": (st.get("description") or "")[:160]})
+    return _emit({"parent": tid, "parent_name": t["name"],
+                  "n_subtechniques": len(subs), "subtechniques": subs})
+
+
 TOOLS_IMPL = {
     "list_tactics": list_tactics,
     "search_techniques": search_techniques,
     "get_technique": get_technique,
+    "list_subtechniques": list_subtechniques,
 }
 
 TOOL_DEFS = [
@@ -209,6 +231,15 @@ TOOL_DEFS = [
                        "ALWAYS call this to confirm a technique before citing it.",
         "parameters": {"type": "object", "properties": {
             "technique_id": {"type": "string"}},
+            "required": ["technique_id"]}}},
+    {"type": "function", "function": {
+        "name": "list_subtechniques",
+        "description": "List all sub-techniques of a parent technique in one call, each "
+                       "with tactic(s) and a snippet — use to compare candidates (e.g. "
+                       "T1110.001 vs .003 vs .004) and pick the most specific match without "
+                       "a separate get_technique per sub-technique.",
+        "parameters": {"type": "object", "properties": {
+            "technique_id": {"type": "string", "description": "parent id, e.g. 'T1110'"}},
             "required": ["technique_id"]}}},
 ]
 
@@ -274,6 +305,12 @@ SYSTEM_PROMPT = textwrap.dedent(f"""\
        `Total Fwd Packets`).
     4. While investigating, write AT MOST one short sentence between tool
        calls — save all prose for the final report.
+    5. Work in ATT&CK techniques and tactics ONLY. Do NOT assign, name, or
+       judge kill-chain phases (Reconnaissance, Delivery, Exploitation,
+       Installation, Command and Control, Actions on Objectives) — a downstream
+       agent maps tactics to phases. If a follow-up mentions a phase or a gap,
+       answer only with whether a technique applies, not by reasoning about
+       phases.
 
     When done, output your MAPPINGS as markdown for humans: per finding, the
     technique(s) chosen, why the evidence supports them, and what evidence
@@ -290,10 +327,12 @@ SYSTEM_PROMPT = textwrap.dedent(f"""\
     """)
 
 
-def build_task(findings: dict) -> str:
+def build_task(findings: dict, kill_chain_request: dict = None) -> str:
     """Format the Network Analyst's structured findings JSON into the TI task
     prompt, assigning stable ids F1..Fn. The eval sidecar reproduces this
-    numbering, so it must stay: enumerate in list order, 1-based."""
+    numbering, so it must stay: enumerate in list order, 1-based.
+    kill_chain_request (M3) appends a structured follow-up from the Kill Chain
+    agent to the context on the retry pass."""
     lines = ["For each finding below, identify the most likely ATT&CK "
              "technique(s). Use your tools to search and confirm — cite only "
              "technique IDs returned by your tools. Explain your reasoning "
@@ -313,17 +352,34 @@ def build_task(findings: dict) -> str:
                   "revise your mappings):", "",
                   followup if isinstance(followup, str)
                   else json.dumps(followup, indent=2)]
+    if kill_chain_request:
+        targets = kill_chain_request.get("target_finding_ids") or []
+        lines += ["", "ADDITIONAL MAPPING REQUEST (a downstream analyst needs "
+                  "more ATT&CK technique coverage). Answer ONLY in terms of "
+                  "techniques and tactics. You MAY add one or more mappings, OR "
+                  "explicitly decline — declining with a brief reason is a valid "
+                  "outcome, not a failure. Keep every prior mapping.",
+                  (f"  finding(s) to reconsider: {targets}" if targets
+                   else "  reconsider all findings above"),
+                  f"  request: {kill_chain_request.get('question')}"]
     return "\n".join(lines)
 
 
-def analyze(client, model, findings: dict):
+def analyze(client, model, findings: dict,
+            plan_mode: bool = False, tool_feedback: bool = False,
+            system_prompt: str = None, kill_chain_request: dict = None):
     """Run the TI agent on Network Analyst findings.
     Returns (mappings_md, mappings_dict_or_None) with grounding checked and
-    'verified' annotated."""
+    'verified' annotated.
+    system_prompt overrides the module default (kept empty by the environment
+    injection matrix — Threat Intel is context-invariant). kill_chain_request
+    threads the Kill Chain retry follow-up into the task (M3)."""
     reset_grounding()
-    report = agent_core.run_agent(client, model, build_task(findings),
-                                  SYSTEM_PROMPT, TOOL_DEFS, TOOLS_IMPL,
-                                  max_turns=TI_MAX_TURNS, label="threat_intel")
+    report = agent_core.run_agent(client, model,
+                                  build_task(findings, kill_chain_request),
+                                  system_prompt or SYSTEM_PROMPT, TOOL_DEFS, TOOLS_IMPL,
+                                  max_turns=TI_MAX_TURNS, label="threat_intel",
+                                  plan_mode=plan_mode, tool_feedback=tool_feedback)
     verify_output_grounding(report)
     structured, md = agent_core.extract_json_block(report)
     if structured is not None:
@@ -370,6 +426,13 @@ if __name__ == "__main__":
     ap.add_argument("--provider", choices=sorted(agent_core.PROVIDERS),
                     default="ollama")
     ap.add_argument("--model", default=None)
+    ap.add_argument("--plan", action="store_true",
+                    help="narrate the plan and per-turn reasoning (no extra "
+                         "API calls; off by default)")
+    ap.add_argument("--tool-feedback", action="store_true",
+                    help="after the report, print + save the model's critique "
+                         "of its tool set beside the objective tool-call log "
+                         "(advisory only; one extra API call; off by default)")
     args = ap.parse_args()
 
     if args.selftest:
@@ -382,6 +445,8 @@ if __name__ == "__main__":
     with open(args.findings, encoding="utf-8") as f:
         findings = json.load(f)
 
-    md, structured = analyze(client, model, findings)
+    md, structured = analyze(client, model, findings,
+                             plan_mode=args.plan,
+                             tool_feedback=args.tool_feedback)
     print("\n" + "=" * 70 + "\nMAPPINGS\n" + "=" * 70 + "\n" + (md or ""))
     agent_core.save_report("mappings", model, md, structured)

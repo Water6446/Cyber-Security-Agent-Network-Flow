@@ -8,12 +8,19 @@ graph TD;
 	network_analyst(network_analyst)
 	threat_intel(threat_intel)
 	network_analyst_followup(network_analyst_followup)
+	kill_chain(kill_chain)
+	threat_intel_kc_followup(threat_intel_kc_followup)
+	report_writer(report_writer)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> network_analyst;
+	kill_chain -.-> report_writer;
+	kill_chain -.-> threat_intel_kc_followup;
 	network_analyst --> threat_intel;
 	network_analyst_followup --> threat_intel;
-	threat_intel -.-> __end__;
+	threat_intel -.-> kill_chain;
 	threat_intel -.-> network_analyst_followup;
+	threat_intel_kc_followup --> kill_chain;
+	report_writer --> __end__;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

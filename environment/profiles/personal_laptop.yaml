@@ -1,0 +1,75 @@
+# environment/profiles/personal_laptop.yaml
+#
+# The second shipped profile and the deliberate CONTRAST to enterprise_dmz.
+# Same schema, wildly different environment: one host, no server assets, no
+# crown jewels beyond the owner's local files, and an analyst_policy written
+# for a home user rather than a SOC. The M7 experiment runs the SAME flow
+# slice under both profiles to show that context — not the packets — is what
+# shifts severity and framing.
+#
+# HARD RULE (constraint #2): facts only in Section A; opinion, fenced, in
+# analyst_policy. No label values, no maliciousness assertions, no phases
+# pinned to hosts. Validated at load time.
+schema_version: 1
+profile_id: personal_laptop
+display_name: "Single personal laptop on a home network"
+
+# ---- SECTION A: FACTS ----
+identity:
+  monitored_scope: "All traffic to and from one personal laptop on a home
+    Wi-Fi network behind a consumer NAT router."
+  organization_type: "Individual home user, no managed IT department."
+
+topology:
+  zones:
+    - name: home_lan
+      cidrs: ["192.168.1.0/24"]
+      description: "Home network behind a consumer router doing NAT."
+      internet_facing: false
+  gateways: ["192.168.1.1"]
+  infrastructure:
+    # On a home network the router is DNS forwarder and DHCP server both;
+    # there is no local time server, the OS uses a public NTP pool.
+    dns: ["192.168.1.1"]
+    dhcp: ["192.168.1.1"]
+    ntp: []
+
+assets:
+  - host: "192.168.1.42"
+    role: "The laptop itself (Windows, single user)"
+    zone: home_lan
+
+expected_services:
+  - description: "Outbound web browsing, software updates and streaming from
+      the laptop to services on the internet"
+    dst: "0.0.0.0/0"
+    ports: [80, 443]
+
+baseline_behavior:
+  business_hours: "No fixed hours; heaviest use evenings and weekends,
+    America/Denver"
+  known_scanners: []
+  typical_volume: "Roughly tens of thousands of flows per day, almost all
+    outbound."
+
+crown_jewels:
+  - description: "The owner's personal files on the local disk — documents,
+      photos, and passwords saved in the browser."
+    host: "192.168.1.42"
+
+# ---- SECTION B: ANALYST POLICY ----
+# Note how different this judgment is from the enterprise profile for the
+# very same traffic patterns: an inbound connection is routine at a DMZ web
+# server and alarming at a home laptop.
+analyst_policy:
+  elevated_concern:
+    - "A connection initiated from the internet toward the laptop. A home
+       laptop behind NAT is rarely the destination of an externally started
+       flow, so treat these as high priority."
+    - "A sustained outbound connection to a single unfamiliar host, which on
+       one personal machine is more consistent with beaconing than browsing."
+  reduced_concern:
+    - "Short-lived connections to many well-known content-delivery and cloud
+       hosts, which is ordinary for browsing and software updates."
+  reporting_audience: "A non-technical laptop owner; explain findings in
+    everyday language and say plainly what they should do next."

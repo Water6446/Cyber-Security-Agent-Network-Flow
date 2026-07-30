@@ -1,0 +1,81 @@
+# environment/profiles/enterprise_dmz.yaml
+#
+# One of the two shipped environment profiles (see environment/README.md).
+# A profile tells the agents WHAT NETWORK they are looking at — the same
+# flows mean different things on a corporate DMZ than on a home laptop.
+#
+# HARD RULE (constraint #2, ground-truth quarantine): this file describes
+# WHAT IS, never WHAT IS BAD about a specific flow/host. No label values,
+# no "host X is the attacker", no phase/technique pinned to an IP. The
+# validator (environment/validator.py) enforces this at load time.
+schema_version: 1
+profile_id: enterprise_dmz
+display_name: "Mid-size enterprise, DMZ + internal LAN"
+
+# ---- SECTION A: FACTS ----
+# Objective, verifiable statements about the environment.
+# Reviewable by someone who has never seen this codebase.
+identity:
+  monitored_scope: "North-south traffic at the perimeter firewall plus east-west
+    traffic inside the 192.168.10.0/24 server VLAN."
+  organization_type: "Approximately 400 employees, single campus."
+
+topology:
+  zones:
+    - name: dmz
+      cidrs: ["192.168.10.0/24"]
+      description: "Externally reachable services."
+      internet_facing: true
+    - name: user_lan
+      cidrs: ["10.0.0.0/16"]
+      description: "Employee workstations, DHCP assigned."
+      internet_facing: false
+  gateways: ["192.168.10.1", "10.0.0.1"]
+  infrastructure:
+    dns: ["10.0.0.53"]
+    dhcp: ["10.0.0.53"]
+    ntp: ["10.0.0.123"]
+
+assets:
+  - host: "192.168.10.50"
+    role: "Public web server (Apache)"
+    zone: dmz
+  - host: "10.0.0.20"
+    role: "Domain controller"
+    zone: user_lan
+
+expected_services:
+  - description: "HTTP/HTTPS inbound to web server from anywhere"
+    dst: "192.168.10.50"
+    ports: [80, 443]
+  - description: "LDAP/Kerberos from user LAN to domain controller"
+    dst: "10.0.0.20"
+    ports: [389, 88, 464]
+
+baseline_behavior:
+  business_hours: "Mon-Fri 07:00-19:00 America/Denver"
+  known_scanners:
+    - host: "10.0.0.200"
+      description: "Nessus vulnerability scanner, scheduled Sundays 02:00."
+  typical_volume: "Roughly 2-4M flows/day at the perimeter."
+
+crown_jewels:
+  - description: "Customer PII database on the domain-joined file server."
+    host: "10.0.0.30"
+  - description: "Source code repository."
+    host: "10.0.0.31"
+
+# ---- SECTION B: ANALYST POLICY ----
+# Judgment, not fact. Human opinion about what matters here.
+# Kept separate so a reviewer can see what the agent is reasoning FROM
+# versus what it has been TOLD TO CONCLUDE.
+analyst_policy:
+  elevated_concern:
+    - "Any outbound connection from the DMZ initiating toward the user LAN.
+       Traffic should flow inward only."
+    - "Authentication traffic to the domain controller outside business hours."
+  reduced_concern:
+    - "Scan-like patterns originating from the known scanner host during its
+       maintenance window."
+  reporting_audience: "SOC tier-1 analysts; assume familiarity with ATT&CK,
+    not with this specific network."
