@@ -62,6 +62,9 @@ def load_attack_data():
         return
 
     if not os.path.exists(ATTACK_LOCAL):
+        # data/ is git-ignored, so it does not exist in a fresh clone — create
+        # it before the download writes the .part file into it.
+        os.makedirs(os.path.dirname(ATTACK_LOCAL), exist_ok=True)
         print(f"[attack] downloading enterprise-attack.json (~50 MB) from MITRE CTI...")
         urllib.request.urlretrieve(ATTACK_URL, ATTACK_LOCAL + ".part")
         os.replace(ATTACK_LOCAL + ".part", ATTACK_LOCAL)

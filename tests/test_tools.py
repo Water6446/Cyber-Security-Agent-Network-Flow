@@ -80,8 +80,7 @@ def test_count_by_two_columns(small_df):
 # ---------------------------------------------------------------------------
 # Threat Intel: list_subtechniques (and grounding-record its ids)
 # ---------------------------------------------------------------------------
-def test_list_subtechniques_and_grounding():
-    ti.load_attack_data()
+def test_list_subtechniques_and_grounding(attack_data):
     ti.reset_grounding()
     out = json.loads(ti.list_subtechniques("T1110"))
     ids = [s["id"] for s in out["subtechniques"]]
@@ -89,8 +88,7 @@ def test_list_subtechniques_and_grounding():
     assert "T1110.003" in ti._returned_ids                  # now citable/grounded
 
 
-def test_list_subtechniques_bad_id():
-    ti.load_attack_data()
+def test_list_subtechniques_bad_id(attack_data):
     out = json.loads(ti.list_subtechniques("T9999"))
     assert "error" in out
 

@@ -32,3 +32,11 @@ DAPT's four APT stages do not map cleanly onto the six Lockheed phases (Lockheed
 has no lateral-movement phase). The crosswalk lives in `eval_sidecar.py` with
 **primary + acceptable-alternate** mappings, and scoring reports **three
 buckets** (primary / alternate / disagreement) — never one blended number.
+
+## Attribution
+
+The datasets this layer loads are third-party work with their own terms, and
+the project license does **not** cover them. Sources, required citations, and
+the terms for CIC-IDS2017, DAPT 2020, and the MITRE ATT&CK bundle are collected
+in [`course/lab/data/README.md`](../course/lab/data/README.md). Cite the
+dataset authors in any published work that uses them.

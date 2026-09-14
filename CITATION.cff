@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: "AI Cyber Analyst: a grounded multi-agent pipeline for network threat explanation"
+message: "If you use this software or the course materials, please cite it as below."
+type: software
+authors:
+  - family-names: Jansen
+    given-names: Maximilian
+    alias: Water6446
+repository-code: "https://github.com/Water6446/U-of-U-Internship"
+abstract: >-
+  A four-agent LLM pipeline that investigates network flow data and explains
+  what it finds: a Network Analyst that reads flows through deterministic tools,
+  a Threat Intelligence agent that maps findings to MITRE ATT&CK with grounding
+  enforced in code, a Kill Chain agent that builds a phase narrative and reports
+  its divergence from a code-derived crosswalk, and a Report Writer that
+  synthesizes the result. Ground truth is quarantined in an evaluation sidecar
+  the agents never see. Includes a five-module undergraduate course and a lab.
+keywords:
+  - cybersecurity
+  - large-language-models
+  - llm-agents
+  - mitre-attack
+  - intrusion-detection
+  - kill-chain
+  - security-education
+license-url: "https://polyformproject.org/licenses/noncommercial/1.0.0"
+date-released: "2026-09-14"

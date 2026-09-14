@@ -85,8 +85,7 @@ def _report(structured):
 
 
 @pytest.fixture(autouse=True)
-def _ctx():
-    ti.load_attack_data()
+def _ctx(attack_data):
     kc._load_run_context(MAPPINGS, FINDINGS)
 
 

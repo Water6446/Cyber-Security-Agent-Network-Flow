@@ -3,8 +3,8 @@
 A multi-agent AI system that investigates and *explains* threats in network flow
 data. Raw flows go in; a four-agent pipeline detects suspicious activity, maps it
 to MITRE ATT&CK, reasons about it as a kill-chain narrative, and writes an
-incident report — with every claim grounded in verifiable evidence. Built across
-a summer internship on the *See One → Do One → Teach One* model.
+incident report — with every claim grounded in verifiable evidence. Built over a
+summer as a personal project, on the *See One → Do One → Teach One* model.
 
 ## What this is — and what it is NOT
 
@@ -89,6 +89,12 @@ ledger).
   attack is committed at `course/lab/data/` so the lab needs no large download.
 - The MITRE ATT&CK STIX bundle is cached under `data/` on first run (git-ignored).
 
+**These datasets are third-party work with their own terms, and this project's
+license does not cover them.** CIC-IDS2017 and DAPT 2020 require that you cite
+their authors in published work. Sources, citations, and terms are collected in
+[`course/lab/data/README.md`](course/lab/data/README.md) — read it before you
+reuse or redistribute the committed slice.
+
 ## Repository layout
 
 | Path | Purpose |
@@ -109,5 +115,29 @@ ledger).
 
 ## License
 
-See `LICENSE`. Note this is university internship work — confirm the intended
-license with the University of Utah before any public release.
+**Free for noncommercial use; commercial use requires a separate license.**
+
+This project is released under the [PolyForm Noncommercial License
+1.0.0](LICENSE). You may use, study, modify, and share it for any noncommercial
+purpose — personal study, coursework, teaching, and academic research are all
+expressly permitted, and the license also covers use by educational institutions
+and other noncommercial organizations.
+
+If you want to use this work, or anything derived from it, in a product, a
+service, a paid course, or consulting or client work — anything primarily
+intended for commercial advantage — **open an issue to arrange terms first.**
+
+This is source-available, not OSI-approved open source; GitHub will label it
+accordingly. Third-party datasets and the MITRE ATT&CK data carry their own
+separate terms (see [Datasets](#datasets)).
+
+## Citing this work
+
+See [`CITATION.cff`](CITATION.cff), or use GitHub's "Cite this repository"
+button.
+
+## Background
+
+Built over a summer as a personal project, advised by faculty at the University
+of Utah. It is independent work and is not an official University of Utah
+product; the university does not endorse it.

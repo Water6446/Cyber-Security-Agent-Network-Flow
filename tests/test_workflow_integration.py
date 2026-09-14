@@ -10,7 +10,6 @@ import json
 
 import pytest
 
-import threat_intel as ti
 import workflow as wf
 from run_manifest import RunManifest
 
@@ -73,8 +72,7 @@ def tiny_csv(tmp_path):
     return str(p)
 
 
-def test_full_four_agent_run_completes(tiny_csv):
-    ti.load_attack_data()
+def test_full_four_agent_run_completes(tiny_csv, attack_data):
     client = FakeClient([NA, TI, KC, RW])
     manifest = RunManifest(provider="fake", model="fake-model")
     manifest.set_dataset("cic_ids2017", "tiny")
@@ -109,9 +107,8 @@ def test_full_four_agent_run_completes(tiny_csv):
     assert "phase_divergence" in state["kill_chain"]
 
 
-def test_run_records_per_agent_injection_with_profile(tiny_csv):
+def test_run_records_per_agent_injection_with_profile(tiny_csv, attack_data):
     import environment as env
-    ti.load_attack_data()
     client = FakeClient([NA, TI, KC, RW])
     manifest = RunManifest(provider="fake", model="fake-model")
     profile = env.load_profile("enterprise_dmz")
@@ -149,8 +146,7 @@ TI_FOLLOWUP = _fenced({"mappings": [
     "evidence_requests": []})
 
 
-def test_kill_chain_retry_fires_exactly_once(tiny_csv):
-    ti.load_attack_data()
+def test_kill_chain_retry_fires_exactly_once(tiny_csv, attack_data):
     client = FakeClient([NA, TI, KC_BAD, TI_FOLLOWUP, KC, RW])
     manifest = RunManifest(provider="fake", model="fake-model")
     graph = wf.build_graph(client, "fake-model", manifest=manifest)

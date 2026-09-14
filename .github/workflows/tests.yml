@@ -1,0 +1,49 @@
+name: tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # SETUP.md promises 3.10+; test the floor and a current version.
+        python-version: ["3.10", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # The MITRE ATT&CK STIX bundle (~50 MB) is fetched on first use and cached
+      # in the git-ignored data/. Cache it across runs so CI isn't hammering
+      # MITRE's repo on every push. Tests skip cleanly if it can't be fetched.
+      - name: Cache MITRE ATT&CK bundle
+        uses: actions/cache@v4
+        with:
+          path: data/enterprise-attack.json
+          key: attack-bundle-${{ github.run_id }}
+          restore-keys: attack-bundle-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Export the workflow diagram (no model, no data)
+        run: python src/workflow.py --diagram-only
