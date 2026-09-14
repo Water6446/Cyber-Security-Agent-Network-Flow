@@ -1,4 +1,4 @@
-# AI Cyber Analyst — Summer Internship Project
+# AI Cyber Analyst
 
 A multi-agent AI system that investigates and *explains* threats in network flow
 data. Raw flows go in; a four-agent pipeline detects suspicious activity, maps it
